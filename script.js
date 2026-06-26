@@ -17,18 +17,28 @@
   }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('[data-reveal-group]').forEach(function (g) { revIO.observe(g); });
 
-  // 2) Troca de frame da imagem conforme o beat cruza o centro da tela
-  var frameIO = new IntersectionObserver(function (es) {
-    es.forEach(function (e) {
-      if (!e.isIntersecting) return;
-      var mod = e.target.closest('.module');
-      var f = e.target.dataset.frame;
+  // 2) Visibilidade do card + troca de frame, ambos dirigidos pelos beats
+  var beatIO = new IntersectionObserver(function (es) {
+    var entering = es.filter(function (e) { return e.isIntersecting; });
+    var leaving   = es.filter(function (e) { return !e.isIntersecting; });
+    if (entering.length) {
+      document.querySelectorAll('.module .imgcard').forEach(function (c) { c.classList.remove('show'); });
+      var latest = entering[entering.length - 1];
+      var mod = latest.target.closest('.module');
+      var f   = latest.target.dataset.frame;
+      var card = mod.querySelector('.imgcard');
+      if (card) card.classList.add('show');
       mod.querySelectorAll('.frame').forEach(function (fr) {
         fr.classList.toggle('active', fr.dataset.frame === f);
       });
-    });
+    } else {
+      leaving.forEach(function (e) {
+        var card = e.target.closest('.module').querySelector('.imgcard');
+        if (card) card.classList.remove('show');
+      });
+    }
   }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
-  document.querySelectorAll('.beat').forEach(function (b) { frameIO.observe(b); });
+  document.querySelectorAll('.beat').forEach(function (b) { beatIO.observe(b); });
 
   // 3) Indicador de progresso lateral
   var navIO = new IntersectionObserver(function (es) {
