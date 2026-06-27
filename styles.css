@@ -1,12 +1,15 @@
 /* Nuki — Jornada dos módulos (landing animation)
    Paleta e tipografia oficiais da Nuki. Edite à vontade. */
 :root{
-  --preto:#000000; --branco:#FFFFFF; --cinza:#434343; --cinza7:#8C8C8C;
-  --borda:#F0F0F0; --claro:#F7F7F7; --verde:#047676; --verde-suave:#E6FAFA; --laranja:#E8713F;
+  --preto:#000000; --branco:#FFFFFF; --cinza:#434343; --cinza7:#6F6F6F;
+  --borda:#F0F0F0; --claro:#F7F7F7; --verde:#047676; --laranja:#E8713F;
+  /* --cinza7 escurecido de #8C8C8C (3.36:1) p/ #6F6F6F (>=4.75:1 em #fff e #F7F7F7) — WCAG AA 1.4.3 */
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:'Manrope',sans-serif;color:var(--preto);background:var(--branco);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+/* Foco de teclado sempre visível — WCAG AA 2.4.7 */
+:focus-visible{outline:2px solid var(--verde);outline-offset:2px;border-radius:3px}
 .wrap{max-width:1180px;margin:0 auto;padding:0 40px;position:relative;z-index:1}
 
 /* HERO */
@@ -22,8 +25,10 @@ body{margin:0;font-family:'Manrope',sans-serif;color:var(--preto);background:var
 .module{position:relative;padding:6vh 0}
 .module.alt{background:var(--claro)}
 .module .grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
-.module.reverse .media{order:-1}
-.bgnum{position:absolute;top:4vh;font-weight:800;font-size:38vh;line-height:.8;color:var(--borda);z-index:0;pointer-events:none;user-select:none;will-change:transform}
+/* só a coluna de texto fica no fluxo; os .shot são position:fixed e preenchem a metade oposta.
+   Em módulos reverse o texto vai para a coluna 2 (direita) e o .shot para a esquerda. */
+.module.reverse .text{grid-column:2}
+.bgnum{position:absolute;top:4vh;font-weight:800;font-size:38vh;line-height:.8;color:var(--borda);z-index:0;pointer-events:none;user-select:none}
 .module:not(.reverse) .bgnum{right:2vw}
 .module.reverse .bgnum{left:2vw}
 
@@ -41,33 +46,38 @@ body{margin:0;font-family:'Manrope',sans-serif;color:var(--preto);background:var
 .hi .num{font-weight:800;font-size:clamp(32px,4vw,46px);line-height:1}
 .hi .lbl{display:block;font-weight:500;font-size:13px;color:var(--cinza7);margin-top:8px;max-width:150px}
 
-/* MEDIA (sticky + frames) */
-.media{height:100%}
-.imgcard{position:fixed;top:50%;transform:translateY(-50%);left:calc(50% + 16px);width:min(740px,calc(50vw - 32px));height:auto;aspect-ratio:8/5;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.2,.7,.2,1);z-index:1}
-.module.reverse .imgcard{left:auto;right:calc(50% + 16px)}
-.imgcard.show{opacity:1}
-.imgcard .sq{display:none}
-#inspetor .imgcard{width:min(320px,28vw);aspect-ratio:9/16}
-#planner .imgcard,#personaliza .imgcard{border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.08),0 24px 48px rgba(0,0,0,.08)}
-#planner .frame::before,#personaliza .frame::before{content:'';position:absolute;width:100%;height:100%;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:8px}
-#planner .frame img.device,#personaliza .frame img.device{position:relative}
-#inspetor .frame img.device{filter:drop-shadow(0 4px 8px rgba(0,0,0,.12)) drop-shadow(0 24px 48px rgba(0,0,0,.20));animation:float-phone 6.5s ease-in-out infinite}
-.frame{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(1.03);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
-.frame.active{opacity:1;transform:scale(1)}
-.frame .ph{font-weight:600;font-size:15px;color:var(--cinza7)}
-.frame img{width:100%;height:100%;object-fit:cover}
-.frame img.device{width:100%;height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 26px 44px rgba(0,0,0,.14));animation:float 6.5s ease-in-out infinite}
-#planner img.device,#personaliza img.device{border-radius:10px;filter:none}
+/* MEDIA — uma imagem por beat (.shot dentro de cada .beat).
+   Desktop: cada .shot fica position:fixed centralizada na metade oposta ao texto e troca
+   por opacidade (dirigida pelos beats). Mobile (<=820px): vira inline no beat (ver media query). */
+.shot{position:fixed;top:50%;left:calc(50% + 16px);transform:translateY(-50%);width:min(740px,calc(50vw - 32px));aspect-ratio:8/5;margin:0;opacity:0;pointer-events:none;transition:opacity .55s cubic-bezier(.2,.7,.2,1);z-index:1}
+.module.reverse .shot{left:auto;right:calc(50% + 16px)}
+.shot.show{opacity:1}
+#inspetor .shot{width:min(320px,28vw);aspect-ratio:9/16}
+#planner .shot,#personaliza .shot{border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 6px 16px rgba(0,0,0,.08),0 24px 48px rgba(0,0,0,.08)}
+#planner .shot::before,#personaliza .shot::before{content:'';position:absolute;width:100%;height:100%;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:8px}
+#inspetor .shot img.device{filter:drop-shadow(0 4px 8px rgba(0,0,0,.12)) drop-shadow(0 24px 48px rgba(0,0,0,.20));animation:float-phone 6.5s ease-in-out infinite}
+.shot picture{display:contents}
+.shot img.device{width:100%;height:100%;object-fit:contain;object-position:center;filter:drop-shadow(0 26px 44px rgba(0,0,0,.14));animation:float 6.5s ease-in-out infinite}
+#planner .shot img.device,#personaliza .shot img.device{position:relative;border-radius:10px;filter:none}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 @keyframes float-phone{0%,100%{transform:scale(1.12) translateY(0)}50%{transform:scale(1.12) translateY(-10px)}}
+
+/* Parallax dos números de fundo: timeline nativa (roda no compositor, fora da main thread).
+   O JS em script.js só roda como fallback onde animation-timeline não existe (ex.: Firefox). */
+@keyframes bgnum-drift{from{transform:translateY(-35px)}to{transform:translateY(35px)}}
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion: no-preference){
+    .bgnum{animation:bgnum-drift linear both;animation-timeline:view()}
+  }
+}
 
 /* REVEAL + STAGGER */
 .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
 .reveal.in{opacity:1;transform:none}
 
 /* PROGRESS NAV */
-.progress{position:fixed;right:30px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:20px}
-.progress a{display:flex;align-items:center;gap:10px;text-decoration:none;justify-content:flex-end}
+.progress{position:fixed;right:30px;top:50%;transform:translateY(-50%);z-index:50;display:flex;flex-direction:column;gap:12px}
+.progress a{display:flex;align-items:center;gap:10px;text-decoration:none;justify-content:flex-end;padding:7px 0;min-height:24px}
 .progress .d{width:9px;height:9px;border-radius:50%;background:var(--borda);transition:all .35s;flex:none}
 .progress .t{font-weight:600;font-size:12px;color:var(--cinza7);opacity:0;transform:translateX(6px);transition:all .35s;white-space:nowrap}
 .progress a.on .d{background:var(--verde);transform:scale(1.4)}
@@ -83,16 +93,25 @@ body{margin:0;font-family:'Manrope',sans-serif;color:var(--preto);background:var
   .wrap{padding:0 22px}
   .progress{display:none}
   .module .grid{grid-template-columns:1fr;gap:24px}
-  .module.reverse .media{order:0}
-  .beat{min-height:auto;margin-bottom:36px}
-  .imgcard{position:relative;top:0;left:auto;right:auto;transform:none;width:auto;height:46vh;aspect-ratio:auto;opacity:1;margin-bottom:8px}
-  .module.reverse .imgcard{left:auto;right:auto}
-  #inspetor .imgcard{width:auto;aspect-ratio:auto}
+  .module.reverse .text{grid-column:auto}
+  /* no mobile os .shot são static (em fluxo), então conter o módulo inteiro é seguro */
+  .module{content-visibility:auto;contain-intrinsic-size:auto 2000px}
+  .beat{min-height:auto;margin-bottom:40px}
+  /* imagem inline dentro do beat, logo após o texto, sempre visível */
+  .shot{position:static;transform:none;width:100%;aspect-ratio:auto;opacity:1;pointer-events:auto;margin:20px 0 0}
+  .module.reverse .shot{right:auto}
+  .shot img.device{height:auto;animation:none;filter:none}
+  #planner .shot,#personaliza .shot{box-shadow:0 8px 24px rgba(0,0,0,.10)}
+  #inspetor .shot{width:100%;max-width:300px;align-self:center}
+  #inspetor .shot img.device{transform:none;filter:drop-shadow(0 8px 20px rgba(0,0,0,.15))}
   .bgnum{font-size:22vh;opacity:.6}
 }
 @media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
   .reveal{transition:none;opacity:1;transform:none}
-  .bgnum{will-change:auto}
+  .scrolldot{animation:none}
+  .shot img.device{animation:none}     /* mata float / float-phone */
+  .shot{transition:opacity .2s linear} /* troca instantânea (mantém o translateY de centragem) */
 }
 
 /* FOOTER */

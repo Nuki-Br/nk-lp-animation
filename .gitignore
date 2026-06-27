@@ -1,0 +1,10 @@
+# Dependências temporárias (o site é estático, sem build)
+node_modules/
+package-lock.json
+
+# Config local de ferramentas/preview
+.claude/
+
+# Artefatos de SO/editor
+.DS_Store
+Thumbs.db

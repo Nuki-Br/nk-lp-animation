@@ -1,5 +1,5 @@
 /* Nuki — Jornada dos módulos
-   Reveal + stagger, troca de frames (sticky), nav de progresso, count-up e parallax.
+   Reveal + stagger, troca de imagem por beat (.shot), nav de progresso, count-up e parallax.
    Tudo em vanilla JS (IntersectionObserver + scroll). Sem dependências. */
 (function () {
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,24 +17,20 @@
   }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('[data-reveal-group]').forEach(function (g) { revIO.observe(g); });
 
-  // 2) Visibilidade do card + troca de frame, ambos dirigidos pelos beats
+  // 2) Troca de imagem dirigida pelos beats — cada beat tem seu .shot (no desktop fica
+  //    fixo/centralizado e troca por opacidade; no mobile o CSS força todos visíveis inline).
   var beatIO = new IntersectionObserver(function (es) {
     var entering = es.filter(function (e) { return e.isIntersecting; });
-    var leaving   = es.filter(function (e) { return !e.isIntersecting; });
     if (entering.length) {
-      document.querySelectorAll('.module .imgcard').forEach(function (c) { c.classList.remove('show'); });
-      var latest = entering[entering.length - 1];
-      var mod = latest.target.closest('.module');
-      var f   = latest.target.dataset.frame;
-      var card = mod.querySelector('.imgcard');
-      if (card) card.classList.add('show');
-      mod.querySelectorAll('.frame').forEach(function (fr) {
-        fr.classList.toggle('active', fr.dataset.frame === f);
-      });
+      var shot = entering[entering.length - 1].target.querySelector('.shot');
+      // mostra só o shot do beat ativo; esconde os demais (em todos os módulos)
+      document.querySelectorAll('.shot').forEach(function (s) { if (s !== shot) s.classList.remove('show'); });
+      if (shot) shot.classList.add('show');
     } else {
-      leaving.forEach(function (e) {
-        var card = e.target.closest('.module').querySelector('.imgcard');
-        if (card) card.classList.remove('show');
+      es.forEach(function (e) {
+        if (e.isIntersecting) return;
+        var shot = e.target.querySelector('.shot');
+        if (shot) shot.classList.remove('show');
       });
     }
   }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
@@ -56,6 +52,7 @@
   function easeOut(p) { return 1 - Math.pow(1 - p, 3); }
   function countUp(el) {
     var target = parseFloat(el.dataset.target), suffix = el.dataset.suffix || '', prefix = el.dataset.prefix || '';
+    if (reduce) { el.textContent = prefix + target + suffix; return; }
     var dur = 1300, start = null;
     function step(ts) {
       if (start === null) start = ts;
@@ -71,7 +68,10 @@
   document.querySelectorAll('.num').forEach(function (n) { nio.observe(n); });
 
   // 5) Parallax leve (número de fundo 01/02/03)
-  if (!reduce) {
+  // Navegadores com scroll-driven animations nativas usam a timeline CSS (compositor);
+  // este listener só roda como fallback (ex.: Firefox).
+  var nativeTimeline = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline', 'view()'));
+  if (!reduce && !nativeTimeline) {
     var px = document.querySelectorAll('[data-parallax]'), ticking = false;
     function onScroll() {
       if (ticking) return;
